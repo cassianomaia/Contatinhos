@@ -1,5 +1,7 @@
 package net.catito.contatinhos
 
+import android.app.Activity
+import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
@@ -9,6 +11,9 @@ import kotlinx.android.synthetic.main.activity_cadastro.*
 
 class CadastraContatinhoActivity : AppCompatActivity() {
 
+    companion object {
+        public const val NOME_CONTATINHO: String = "nomecontatinho"
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_cadastro)
@@ -36,6 +41,11 @@ class CadastraContatinhoActivity : AppCompatActivity() {
                                     edtEmail.text.toString(),
                                     edtEndereco.text.toString())
 
-        Toast.makeText(this, contatinho.toString(), Toast.LENGTH_LONG).show()
+        //Toast.makeText(this, contatinho.toString(), Toast.LENGTH_LONG).show()
+
+        val abreLista = Intent(this,ListaContatinhosActivity::class.java)
+        abreLista.putExtra(NOME_CONTATINHO, contatinho.nome)
+        setResult(Activity.RESULT_OK, abreLista)
+        finish()
     }
 }
