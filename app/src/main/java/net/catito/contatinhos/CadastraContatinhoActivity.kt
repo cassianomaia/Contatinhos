@@ -7,7 +7,7 @@ import android.view.MenuItem
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_cadastro.*
 
-class Cadastro : AppCompatActivity() {
+class CadastraContatinhoActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
