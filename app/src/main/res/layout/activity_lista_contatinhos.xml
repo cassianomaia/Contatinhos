@@ -22,7 +22,7 @@
         android:layout_gravity="bottom|right"
         android:layout_marginRight="16dp"
         android:layout_marginBottom="16dp"
-        android:elevation="6dp"/>
-        <!-- TODO: Criar ic_add_person -->
+        android:elevation="6dp"
+        android:src="@drawable/ic_add"/>
 
 </FrameLayout>

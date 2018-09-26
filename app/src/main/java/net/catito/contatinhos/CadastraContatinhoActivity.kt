@@ -1,25 +1,174 @@
 package net.catito.contatinhos
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.media.ExifInterface
+import android.net.Uri
+import android.os.Build
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
+import android.support.v4.content.FileProvider
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.widget.ImageView
+import android.widget.PopupMenu
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_cadastro.*
+import java.io.File
 
 class CadastraContatinhoActivity : AppCompatActivity() {
 
     companion object {
         public const val NOME_CONTATINHO: String = "nomecontatinho"
+        private const val REQUET_PERMISSOES: Int = 3
+        private const val REQUEST_CAMERA: Int = 10
     }
+
+    var caminhoFoto:String? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_cadastro)
 
         btnFoto.setOnClickListener() {
-            Toast.makeText(this, "Vamos tirar uma foto!", Toast.LENGTH_SHORT).show()
+           tirarFoto()
+        }
+
+        imgTelefone.setOnClickListener(){ view ->
+            telefonaOuEnviaMensagem(view)
+        }
+
+        imgEmail.setOnClickListener(){
+            enviaEmail()
+        }
+
+        imgEndereco.setOnClickListener(){
+            mostrarNoMapa()
+        }
+    }
+
+    private fun tirarFoto() {
+        val tirarFoto = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+
+        if (tirarFoto.resolveActivity(packageManager) != null) {
+            val arquivoFoto = montaArquivoFoto()
+            val uriFoto = FileProvider.getUriForFile(this, "${BuildConfig.APPLICATION_ID}.fileprovider", arquivoFoto)
+            tirarFoto.putExtra(MediaStore.EXTRA_OUTPUT, uriFoto)
+            startActivityForResult(tirarFoto, REQUEST_CAMERA)
+        } else {
+            Toast.makeText(this, "Impossivel tirar Foto", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun montaArquivoFoto(): File {
+        val nomeArquivo = System.currentTimeMillis().toString()
+        val diretorioArquivo = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        val arquivoFoto = File.createTempFile(nomeArquivo, "jpg", diretorioArquivo)
+        caminhoFoto = arquivoFoto.absolutePath
+        return arquivoFoto
+    }
+
+    fun verificaRotacao(bitmap:Bitmap):Bitmap {
+        val ei = ExifInterface(caminhoFoto)
+        val orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_UNDEFINED)
+
+        return when (orientation){
+            ExifInterface.ORIENTATION_ROTATE_90 -> rotateImage(bitmap, 90F)
+            ExifInterface.ORIENTATION_ROTATE_180 -> rotateImage(bitmap, 180F)
+            ExifInterface.ORIENTATION_ROTATE_270 -> rotateImage(bitmap, 270F)
+            else -> bitmap
+        }
+    }
+    private fun rotateImage(source:Bitmap, angle:Float):Bitmap{
+        val matrix = Matrix()
+        matrix.postRotate(angle)
+        return Bitmap.createBitmap(source, 0,0,source.width, source.height, matrix, true)
+    }
+
+    fun telefonaOuEnviaMensagem(view: View?) {
+        val popup = PopupMenu(this, view)
+        popup.inflate(R.menu.menu_telefona_ou_mensagem)
+
+        popup.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.menuMensagem -> enviaMensagem()
+                R.id.menuTelefone -> efetuaLigacao()
+                else -> false
+            }
+        }
+
+        popup.show()
+    }
+
+    fun enviaMensagem():Boolean {
+        val enviarMensagem = Intent(Intent.ACTION_VIEW)
+        enviarMensagem.data = Uri.parse("sms:${edtTelefone.text}")
+        enviarMensagem.putExtra("sms_body", "Oi sumidx")
+
+        if (enviarMensagem.resolveActivity(packageManager) != null) {
+            startActivity(enviarMensagem)
+            return true
+        } else {
+            Toast.makeText(this, "Impossivel enviar mensagem!", Toast.LENGTH_SHORT).show()
+            return false
+        }
+    }
+
+    fun efetuaLigacao():Boolean {
+        val efetuarLigacao = Intent(Intent.ACTION_CALL)
+        efetuarLigacao.data = Uri.parse("tel:${edtTelefone.text}")
+        efetuarLigacao.putExtra("sms_body", "Oi sumidx")
+
+        //verifica se pode fazer a ligaçao
+        if (efetuarLigacao.resolveActivity(packageManager) != null) {
+
+            //verifica se a versão necessita de pedir permissão em tempo real
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (checkSelfPermission(Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(arrayOf(Manifest.permission.CALL_PHONE), REQUET_PERMISSOES)
+                    return false
+                } else {
+                    startActivity(efetuarLigacao)
+                    return true
+                }
+
+            } else {
+                startActivity(efetuarLigacao)
+                return true
+            }
+        } else {
+            Toast.makeText(this, "Impossivel efetuar ligação!", Toast.LENGTH_SHORT).show()
+            return false
+        }
+    }
+
+    fun enviaEmail() {
+        val enviarEmail = Intent(Intent.ACTION_VIEW)
+        enviarEmail.data = Uri.parse("sms:${edtEmail.text}")
+        enviarEmail.putExtra(Intent.EXTRA_SUBJECT, "Oi sumidx")
+
+        if (enviarEmail.resolveActivity(packageManager) != null) {
+            startActivity(enviarEmail)
+        } else {
+            Toast.makeText(this, "Impossivel enviar email!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun mostrarNoMapa() {
+        val mostrarNoMapa = Intent(Intent.ACTION_VIEW)
+        mostrarNoMapa.data = Uri.parse("geo:0,0?q=${edtEndereco.text}")
+        if (mostrarNoMapa.resolveActivity(packageManager) != null) {
+            startActivity(mostrarNoMapa)
+        } else {
+            Toast.makeText(this, "Impossivel mostrar no mapa", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -33,6 +182,29 @@ class CadastraContatinhoActivity : AppCompatActivity() {
             R.id.menuSalvar -> salvaContatinho()
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if(requestCode == REQUET_PERMISSOES && (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED)){
+            Toast.makeText(this, "Necessário permissão para fazer ligação!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if(requestCode == REQUEST_CAMERA && resultCode == Activity.RESULT_OK){
+
+            val arquivoFoto = File(caminhoFoto)
+            if(arquivoFoto.exists()){
+                var bitmap = BitmapFactory.decodeFile(arquivoFoto.absolutePath)
+                bitmap = verificaRotacao(bitmap)
+                imgFoto.setImageBitmap(bitmap)
+                imgFoto.scaleType = ImageView.ScaleType.CENTER_CROP
+            }
+        }
     }
 
     private fun salvaContatinho() {

@@ -10,18 +10,20 @@
 
     <requestFocus/>
 
-    <LinearLayout
+    <GridLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
+        android:layout_height="wrap_content"
         tools:context=".CadastroActivity"
-        android:paddingBottom="16dp">
+        android:paddingBottom="16dp"
+        android:columnCount="2">
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="420dp">
+            android:layout_height="420dp"
+            android:layout_columnSpan="2">
 
             <ImageView
+                android:id="@+id/imgFoto"
                 android:layout_width="match_parent"
                 android:layout_height="400dp"
                 android:background="@color/gray"
@@ -40,41 +42,52 @@
                 android:src="@drawable/ic_camera_alt"/>
         </FrameLayout>
 
-        <TextView
-            style="@style/FormTextView"
-            android:text="@string/nome"/>
+        <ImageView
+            style="@style/FormImageView"
+            android:contentDescription="@string/nome"
+            android:src="@drawable/ic_person_box"/>
 
         <EditText
             android:id="@+id/edtNome"
             style="@style/FormEditText"
-            android:inputType="textPersonName|textCapWords" />
+            android:inputType="textPersonName|textCapWords"
+            android:hint="@string/nome"/>
 
-        <TextView
-            style="@style/FormTextView"
-            android:text="@string/telefone" />
+        <ImageView
+            android:id="@+id/imgTelefone"
+            style="@style/FormImageView"
+            android:contentDescription="@string/telefone"
+            android:src="@drawable/ic_perm_phone_msg"/>
 
         <EditText
             android:id="@+id/edtTelefone"
             style="@style/FormEditText"
+            android:hint="@string/telefone"
             android:inputType="phone" />
 
-        <TextView
-            style="@style/FormTextView"
-            android:text="@string/email"/>
+        <ImageView
+            android:id="@+id/imgEmail"
+            style="@style/FormImageView"
+            android:contentDescription="@string/email"
+            android:src="@drawable/ic_email"/>
 
         <EditText
             android:id="@+id/edtEmail"
             style="@style/FormEditText"
+            android:hint="@string/email"
             android:inputType="textEmailAddress" />
 
-        <TextView
-            style="@style/FormTextView"
-            android:text="@string/endereco"/>
+        <ImageView
+            android:id="@+id/imgEndereco"
+            style="@style/FormImageView"
+            android:contentDescription="@string/endereco"
+            android:src="@drawable/ic_map"/>
 
         <EditText
             android:id="@+id/edtEndereco"
             style="@style/FormEditText"
+            android:hint="@string/endereco"
             android:imeOptions="actionDone"
             android:inputType="textCapWords|textPostalAddress" />
-    </LinearLayout>
+    </GridLayout>
 </ScrollView>

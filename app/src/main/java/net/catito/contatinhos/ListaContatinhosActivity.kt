@@ -7,13 +7,15 @@ import android.os.Bundle
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_lista_contatinhos.*
+import java.util.ArrayList
 
 class ListaContatinhosActivity : AppCompatActivity() {
 
     companion object {
         private const val REQUEST_CADASTRO: Int = 1
+        private const val LISTA = "ListaContatinhos"
     }
-    val listaContatinhos: MutableList<String> = mutableListOf()
+    var listaContatinhos: MutableList<String> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,6 +50,20 @@ class ListaContatinhosActivity : AppCompatActivity() {
             if (novoContatinho != null) {
                 listaContatinhos.add(novoContatinho)
             }
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle?) {
+        super.onSaveInstanceState(outState)
+
+        outState?.putStringArrayList(LISTA, listaContatinhos as ArrayList<String>)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
+        super.onRestoreInstanceState(savedInstanceState)
+
+        if(savedInstanceState != null){
+            listaContatinhos = savedInstanceState.getStringArrayList(LISTA).toMutableList();
         }
     }
 }

@@ -5,4 +5,6 @@
     <string name="email">Email</string>
     <string name="endereco">Endereço</string>
     <string name="salvar">Salvar</string>
+    <string name="enviar_mensagem">Enviar Mensagem</string>
+    <string name="telefonar">Telefonar</string>
 </resources>
