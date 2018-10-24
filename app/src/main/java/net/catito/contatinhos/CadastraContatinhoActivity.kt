@@ -22,16 +22,22 @@ import java.io.File
 class CadastraContatinhoActivity : AppCompatActivity() {
 
     companion object {
-        public const val NOME_CONTATINHO: String = "nomecontatinho"
+        public const val CONTATINHO: String = "Contatinho"
         private const val REQUET_PERMISSOES: Int = 3
         private const val REQUEST_CAMERA: Int = 10
     }
 
     var caminhoFoto:String? = null
+    var caminhoFotoAceita:String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_cadastro)
+
+        val contatinho: Contatinho? = intent.getSerializableExtra(CONTATINHO) as Contatinho?
+        if(contatinho != null){
+            carregaDados(contatinho)
+        }
 
         btnFoto.setOnClickListener() {
            tirarFoto()
@@ -48,6 +54,21 @@ class CadastraContatinhoActivity : AppCompatActivity() {
         imgEndereco.setOnClickListener(){
             mostrarNoMapa()
         }
+    }
+
+    private fun carregaDados(contatinho: Contatinho) {
+        edtNome.setText(contatinho.nome)
+        edtTelefone.setText(contatinho.telefone)
+        edtEmail.setText(contatinho.email)
+        edtEndereco.setText(contatinho.endereco)
+
+        GlideApp.with(this)
+                .load(contatinho.caminhoFoto)
+                .centerCrop()
+                .placeholder(R.drawable.ic_person)
+                .into(imgFoto)
+
+        caminhoFotoAceita = contatinho.caminhoFoto
     }
 
     private fun tirarFoto() {
@@ -179,19 +200,35 @@ class CadastraContatinhoActivity : AppCompatActivity() {
                     .centerCrop()
                     .placeholder(R.drawable.ic_person)
                     .into(imgFoto)
+
+            caminhoFotoAceita = caminhoFoto
         }
     }
 
     private fun salvaContatinho() {
+
+        if(edtNome.text.isEmpty()){
+            edtNome.requestFocus()
+            edtNome.setError(getString(R.string.campo_obrigatorio))
+            return
+        }
+
+        if(edtTelefone.text.isEmpty()){
+            edtTelefone.requestFocus()
+            edtTelefone.setError(getString(R.string.campo_obrigatorio))
+            return
+        }
+
         val contatinho = Contatinho(edtNome.text.toString(),
                                     edtTelefone.text.toString(),
                                     edtEmail.text.toString(),
-                                    edtEndereco.text.toString())
+                                    edtEndereco.text.toString(),
+                                    caminhoFotoAceita)
 
         //Toast.makeText(this, contatinho.toString(), Toast.LENGTH_LONG).show()
 
         val abreLista = Intent(this,ListaContatinhosActivity::class.java)
-        abreLista.putExtra(NOME_CONTATINHO, contatinho.nome)
+        abreLista.putExtra(CONTATINHO, contatinho)
         setResult(Activity.RESULT_OK, abreLista)
         finish()
     }
