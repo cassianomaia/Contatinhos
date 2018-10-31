@@ -17,6 +17,8 @@ import android.view.View
 import android.widget.PopupMenu
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_cadastro.*
+import org.jetbrains.anko.doAsync
+import org.jetbrains.anko.uiThread
 import java.io.File
 
 class CadastraContatinhoActivity : AppCompatActivity() {
@@ -29,14 +31,15 @@ class CadastraContatinhoActivity : AppCompatActivity() {
 
     var caminhoFoto:String? = null
     var caminhoFotoAceita:String? = null
+    var contatinho: Contatinho? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_cadastro)
 
-        val contatinho: Contatinho? = intent.getSerializableExtra(CONTATINHO) as Contatinho?
+        contatinho = intent.getSerializableExtra(CONTATINHO) as Contatinho?
         if(contatinho != null){
-            carregaDados(contatinho)
+            carregaDados()
         }
 
         btnFoto.setOnClickListener() {
@@ -56,19 +59,19 @@ class CadastraContatinhoActivity : AppCompatActivity() {
         }
     }
 
-    private fun carregaDados(contatinho: Contatinho) {
-        edtNome.setText(contatinho.nome)
-        edtTelefone.setText(contatinho.telefone)
-        edtEmail.setText(contatinho.email)
-        edtEndereco.setText(contatinho.endereco)
+    private fun carregaDados() {
+        edtNome.setText(contatinho?.nome)
+        edtTelefone.setText(contatinho?.telefone)
+        edtEmail.setText(contatinho?.email)
+        edtEndereco.setText(contatinho?.endereco)
 
         GlideApp.with(this)
-                .load(contatinho.caminhoFoto)
+                .load(contatinho?.caminhoFoto)
                 .centerCrop()
                 .placeholder(R.drawable.ic_person)
                 .into(imgFoto)
 
-        caminhoFotoAceita = contatinho.caminhoFoto
+        caminhoFotoAceita = contatinho?.caminhoFoto
     }
 
     private fun tirarFoto() {
@@ -218,18 +221,27 @@ class CadastraContatinhoActivity : AppCompatActivity() {
             edtTelefone.setError(getString(R.string.campo_obrigatorio))
             return
         }
-
-        val contatinho = Contatinho(edtNome.text.toString(),
-                                    edtTelefone.text.toString(),
-                                    edtEmail.text.toString(),
-                                    edtEndereco.text.toString(),
-                                    caminhoFotoAceita)
-
+        if(contatinho == null) {
+            contatinho = Contatinho(edtNome.text.toString(),
+                    edtTelefone.text.toString(),
+                    edtEmail.text.toString(),
+                    edtEndereco.text.toString(),
+                    caminhoFotoAceita)
+        }else {
+            contatinho?.nome = edtNome.text.toString()
+            contatinho?.telefone = edtTelefone.text.toString()
+            contatinho?.email = edtEmail.text.toString()
+            contatinho?.endereco = edtEndereco.text.toString()
+            contatinho?.caminhoFoto = caminhoFotoAceita
+        }
         //Toast.makeText(this, contatinho.toString(), Toast.LENGTH_LONG).show()
 
-        val abreLista = Intent(this,ListaContatinhosActivity::class.java)
-        abreLista.putExtra(CONTATINHO, contatinho)
-        setResult(Activity.RESULT_OK, abreLista)
-        finish()
+        val contatinhoDao: ContatinhoDao = AppDatabase.getInstance(this).contatinhoDao()
+        doAsync {
+            contatinhoDao.insert(contatinho!!)
+            uiThread {
+                finish()
+            }
+        }
     }
 }

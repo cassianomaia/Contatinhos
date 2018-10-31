@@ -6,6 +6,9 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_lista_contatinhos.*
+import org.jetbrains.anko.activityUiThreadWithContext
+import org.jetbrains.anko.doAsync
+import org.jetbrains.anko.uiThread
 import java.util.ArrayList
 
 class ListaContatinhosActivity : AppCompatActivity() {
@@ -15,7 +18,6 @@ class ListaContatinhosActivity : AppCompatActivity() {
         private const val LISTA = "ListaContatinhos"
     }
     var listaContatinhos: MutableList<Contatinho> = mutableListOf()
-    var indexContatinhoClicado: Int = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,7 +27,7 @@ class ListaContatinhosActivity : AppCompatActivity() {
 
         btnAddContatinho.setOnClickListener() {
             val cadastrarContatinho = Intent(this, CadastraContatinhoActivity::class.java)
-            startActivityForResult(cadastrarContatinho, REQUEST_CADASTRO)
+            startActivity(cadastrarContatinho)
         }
     }
 
@@ -35,38 +37,41 @@ class ListaContatinhosActivity : AppCompatActivity() {
     }
 
     private fun carregaLista() {
-        val adapter = ContatinhoAdapter(this, listaContatinhos)
 
-        adapter.setOnItemClickListener { indexContatinhoClicado ->
-                this.indexContatinhoClicado = indexContatinhoClicado
-                val editaContatinho = Intent(this, CadastraContatinhoActivity::class.java)
-                editaContatinho.putExtra(CadastraContatinhoActivity.CONTATINHO, listaContatinhos.get(indexContatinhoClicado))
-                this.startActivityForResult(editaContatinho, REQUEST_CADASTRO)
-        }
 
-        adapter.configuraClickLongo {indexContatinhoClicado ->
-            listaContatinhos.removeAt(indexContatinhoClicado)
-            carregaLista()
-            true
-        }
+        val contatinhoDao = AppDatabase.getInstance(this).contatinhoDao()
+        doAsync{
+            listaContatinhos = contatinhoDao.getAll() as MutableList<Contatinho>
 
-        val layoutManager = LinearLayoutManager(this)
-        rvContatinhos.adapter = adapter
-        rvContatinhos.layoutManager = layoutManager
-    }
+            activityUiThreadWithContext {
+                val adapter = ContatinhoAdapter(this, listaContatinhos)
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if(requestCode == REQUEST_CADASTRO && resultCode == Activity.RESULT_OK) {
-            val contatinho: Contatinho? = data?.getSerializableExtra(CadastraContatinhoActivity.CONTATINHO) as Contatinho
-            if (contatinho != null) {
-                if(indexContatinhoClicado >= 0){
-                    listaContatinhos.set(indexContatinhoClicado, contatinho)
-                    indexContatinhoClicado = -1
-                }else {
-                    listaContatinhos.add(contatinho)
+                adapter.setOnItemClickListener { indexContatinhoClicado ->
+                    val editaContatinho = Intent(this, CadastraContatinhoActivity::class.java)
+                    editaContatinho.putExtra(CadastraContatinhoActivity.CONTATINHO, listaContatinhos.get(indexContatinhoClicado))
+                    startActivity(editaContatinho)
                 }
+
+                adapter.configuraClickLongo {indexContatinhoClicado ->
+
+                    doAsync {
+                        contatinhoDao.delete(listaContatinhos.get(indexContatinhoClicado))
+
+                        uiThread {
+                            carregaLista()
+                        }
+                    }
+                    true
+                }
+
+                val layoutManager = LinearLayoutManager(this)
+                rvContatinhos.adapter = adapter
+                rvContatinhos.layoutManager = layoutManager
             }
         }
+
+
+
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {

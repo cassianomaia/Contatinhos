@@ -6,11 +6,11 @@ import android.arch.persistence.room.PrimaryKey
 import java.io.Serializable
 
 @Entity
-data class Contatinho (val nome: String,
-                       val telefone: String,
-                       val email: String? = null,
-                       val endereco: String? = null,
+data class Contatinho (var nome: String,
+                       var telefone: String,
+                       var email: String? = null,
+                       var endereco: String? = null,
                        @ColumnInfo(name="caminho_foto")
-                       val caminhoFoto: String? = null,
+                       var caminhoFoto: String? = null,
                        @PrimaryKey(autoGenerate = true)
-                       val id: Int): Serializable
+                       var id: Int = 0): Serializable
