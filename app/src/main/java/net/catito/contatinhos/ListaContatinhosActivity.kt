@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_lista_contatinhos.*
 import java.util.ArrayList
@@ -15,7 +14,8 @@ class ListaContatinhosActivity : AppCompatActivity() {
         private const val REQUEST_CADASTRO: Int = 1
         private const val LISTA = "ListaContatinhos"
     }
-    var listaContatinhos: MutableList<String> = mutableListOf()
+    var listaContatinhos: MutableList<Contatinho> = mutableListOf()
+    var indexContatinhoClicado: Int = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,20 +35,36 @@ class ListaContatinhosActivity : AppCompatActivity() {
     }
 
     private fun carregaLista() {
-        val adapter = ContatinhoAdapter(listaContatinhos)
-        val layoutManager = LinearLayoutManager(this)
-        val dividerItemDecoration = DividerItemDecoration(this, layoutManager.orientation)
+        val adapter = ContatinhoAdapter(this, listaContatinhos)
 
+        adapter.setOnItemClickListener { indexContatinhoClicado ->
+                this.indexContatinhoClicado = indexContatinhoClicado
+                val editaContatinho = Intent(this, CadastraContatinhoActivity::class.java)
+                editaContatinho.putExtra(CadastraContatinhoActivity.CONTATINHO, listaContatinhos.get(indexContatinhoClicado))
+                this.startActivityForResult(editaContatinho, REQUEST_CADASTRO)
+        }
+
+        adapter.configuraClickLongo {indexContatinhoClicado ->
+            listaContatinhos.removeAt(indexContatinhoClicado)
+            carregaLista()
+            true
+        }
+
+        val layoutManager = LinearLayoutManager(this)
         rvContatinhos.adapter = adapter
         rvContatinhos.layoutManager = layoutManager
-        rvContatinhos.addItemDecoration(dividerItemDecoration)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if(requestCode == REQUEST_CADASTRO && resultCode == Activity.RESULT_OK) {
-            val novoContatinho: String? = data?.getStringExtra(CadastraContatinhoActivity.NOME_CONTATINHO)
-            if (novoContatinho != null) {
-                listaContatinhos.add(novoContatinho)
+            val contatinho: Contatinho? = data?.getSerializableExtra(CadastraContatinhoActivity.CONTATINHO) as Contatinho
+            if (contatinho != null) {
+                if(indexContatinhoClicado >= 0){
+                    listaContatinhos.set(indexContatinhoClicado, contatinho)
+                    indexContatinhoClicado = -1
+                }else {
+                    listaContatinhos.add(contatinho)
+                }
             }
         }
     }
@@ -56,14 +72,14 @@ class ListaContatinhosActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
 
-        outState?.putStringArrayList(LISTA, listaContatinhos as ArrayList<String>)
+        outState?.putSerializable(LISTA, listaContatinhos as ArrayList<String>)
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
         super.onRestoreInstanceState(savedInstanceState)
 
         if(savedInstanceState != null){
-            listaContatinhos = savedInstanceState.getStringArrayList(LISTA).toMutableList();
+            listaContatinhos = savedInstanceState.getSerializable(LISTA) as MutableList<Contatinho>
         }
     }
 }

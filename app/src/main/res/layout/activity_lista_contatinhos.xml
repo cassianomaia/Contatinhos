@@ -10,7 +10,8 @@
     <android.support.v7.widget.RecyclerView
         android:id="@+id/rvContatinhos"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        tools:Listitem="@layout/contatinho_item_lista">
 
     </android.support.v7.widget.RecyclerView>
 

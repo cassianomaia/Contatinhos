@@ -7,4 +7,5 @@
     <string name="salvar">Salvar</string>
     <string name="enviar_mensagem">Enviar Mensagem</string>
     <string name="telefonar">Telefonar</string>
+    <string name="campo_obrigatorio">Campo Obrigatório!!!!</string>
 </resources>
